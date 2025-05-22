@@ -1,0 +1,18 @@
+FROM node:18-alpine
+
+WORKDIR /usr/src/app
+
+COPY package.json yarn.lock ./
+
+# Instalar todas las dependencias incluyendo las de desarrollo
+RUN yarn install
+
+# Copiar el código fuente y configuración de TypeScript
+COPY tsconfig.json .
+COPY src ./src
+
+# Exponer el puerto
+EXPOSE 3000
+
+# Usar nodemon para desarrollo
+CMD ["yarn", "dev"] 
