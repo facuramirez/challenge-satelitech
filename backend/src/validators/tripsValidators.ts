@@ -95,6 +95,10 @@ export const updateTripsValidator = [
     .custom((value: any, { req }: { req: Request }) => {
       const objectKeys = Object.keys(req.body);
       const fields = [
+        "createdAt",
+        "updatedAt",
+        "__v",
+        "_id",
         "destination",
         "fuel",
         "liters",
