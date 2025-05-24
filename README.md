@@ -60,10 +60,10 @@ Gracias al uso de **volúmenes en Docker**, los datos permanecerán persistentes
 
 ###
 
-3. **Abrir una terminal** y situarse en la carpeta raíz del proyecto (ej: `challenge`)
+3. **Abrir una terminal** y situarse en la carpeta raíz del proyecto (`./challenge-satelitech`)
 
    ```bash
-   cd challenge
+   ./directorio-donde-se-clonó-este-repositorio/challenge-satelitech
    ```
 
 ###
