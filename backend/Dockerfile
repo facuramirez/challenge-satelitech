@@ -32,7 +32,7 @@ RUN yarn install --production --frozen-lockfile
 COPY --from=builder /usr/src/app/dist ./dist
 
 # Exponer el puerto
-EXPOSE 3000
+EXPOSE 4000
 
 # Comando para iniciar la aplicación
 CMD ["node", "dist/app.js"] 

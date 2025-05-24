@@ -153,7 +153,97 @@ const useTripStore = create((set, get) => ({
   setLoading: (loading) => set({ loading }),
   
   // Limpiar errores
-  clearError: () => set({ error: null })
+  clearError: () => set({ error: null }),
+
+  updateTrip: async (tripId, tripData) => {
+    try {
+      const response = await axiosInstance.put(`/trips/${tripId}`, tripData);
+      
+      // Actualizar el estado con el viaje modificado
+      set((state) => {
+        const updatedAllTrips = state.allTrips.map(trip => 
+          trip._id === tripId ? { ...trip, ...response.data } : trip
+        );
+        
+        const total = updatedAllTrips.length;
+        const totalPages = Math.ceil(total / state.pageSize);
+        const start = (state.currentPage - 1) * state.pageSize;
+        const end = start + state.pageSize;
+
+        // Mantener el ordenamiento actual si existe
+        const sortedTrips = state.sortConfig.key 
+          ? [...updatedAllTrips].sort((a, b) => {
+              if (state.sortConfig.key === 'departureDate') {
+                return state.sortConfig.direction === 'asc'
+                  ? new Date(a[state.sortConfig.key]) - new Date(b[state.sortConfig.key])
+                  : new Date(b[state.sortConfig.key]) - new Date(a[state.sortConfig.key]);
+              }
+              
+              if (a[state.sortConfig.key] < b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? -1 : 1;
+              if (a[state.sortConfig.key] > b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? 1 : -1;
+              return 0;
+            })
+          : updatedAllTrips;
+
+        return {
+          allTrips: sortedTrips,
+          trips: sortedTrips.slice(start, end),
+          total,
+          totalPages
+        };
+      });
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Error al actualizar el viaje';
+      set({ error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  deleteTrip: async (tripId) => {
+    try {
+      await axiosInstance.delete(`/trips/${tripId}`);
+      
+      // Actualizar el estado eliminando el viaje
+      set((state) => {
+        const updatedAllTrips = state.allTrips.filter(trip => trip._id !== tripId);
+        const total = updatedAllTrips.length;
+        const totalPages = Math.ceil(total / state.pageSize);
+        const start = (state.currentPage - 1) * state.pageSize;
+        const end = start + state.pageSize;
+
+        // Mantener el ordenamiento actual si existe
+        const sortedTrips = state.sortConfig.key 
+          ? [...updatedAllTrips].sort((a, b) => {
+              if (state.sortConfig.key === 'departureDate') {
+                return state.sortConfig.direction === 'asc'
+                  ? new Date(a[state.sortConfig.key]) - new Date(b[state.sortConfig.key])
+                  : new Date(b[state.sortConfig.key]) - new Date(a[state.sortConfig.key]);
+              }
+              
+              if (a[state.sortConfig.key] < b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? -1 : 1;
+              if (a[state.sortConfig.key] > b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? 1 : -1;
+              return 0;
+            })
+          : updatedAllTrips;
+
+        return {
+          allTrips: sortedTrips,
+          trips: sortedTrips.slice(start, end),
+          total,
+          totalPages,
+          currentPage: state.currentPage > totalPages ? totalPages : state.currentPage
+        };
+      });
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Error al eliminar el viaje';
+      set({ error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
 }));
 
 export default useTripStore; 

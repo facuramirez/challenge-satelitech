@@ -3,8 +3,9 @@ import { toast } from "react-toastify";
 import useTripStore from "../store/useTripStore";
 import { formatDateToDatetimeLocal } from "../utils/formatDatePicker";
 
-const TripModal = ({ isOpen, onClose }) => {
+const TripModal = ({ isOpen, onClose, trip }) => {
   const createTrip = useTripStore((state) => state.createTrip);
+  const updateTrip = useTripStore((state) => state.updateTrip);
   const [formData, setFormData] = useState({
     truck: "",
     driver: "",
@@ -12,15 +13,18 @@ const TripModal = ({ isOpen, onClose }) => {
     destination: "",
     fuel: "",
     liters: "",
-    departureDate: formatDateToDatetimeLocal(
-      new Date(new Date().getFullYear(), 0, 1)
-    ),
+    departureDate: formatDateToDatetimeLocal(new Date()),
     status: "",
   });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (trip) {
+      setFormData({
+        ...trip,
+        departureDate: formatDateToDatetimeLocal(new Date(trip.departureDate)),
+      });
+    } else if (!isOpen) {
       setFormData({
         truck: "",
         driver: "",
@@ -32,12 +36,12 @@ const TripModal = ({ isOpen, onClose }) => {
         status: "",
       });
     }
-  }, [isOpen]);
+  }, [isOpen, trip]);
 
   const handleErrors = () => {
     return Object.entries(formData).some(
       ([key, value]) =>
-        value === "" || (key === "liters" && value > parseInt(35000))
+        value === "" || (key === "liters" && value > parseInt(30000))
     );
   };
 
@@ -52,12 +56,22 @@ const TripModal = ({ isOpen, onClose }) => {
     }
     try {
       setLoading(true);
-      const result = await createTrip(formData);
+      let result;
+
+      if (trip) {
+        result = await updateTrip(trip._id, formData);
+      } else {
+        result = await createTrip(formData);
+      }
+
       if (result.success) {
-        toast.success("Viaje creado exitosamente", {
-          position: "bottom-center",
-          autoClose: 3000,
-        });
+        toast.success(
+          trip ? "Viaje actualizado exitosamente" : "Viaje creado exitosamente",
+          {
+            position: "bottom-center",
+            autoClose: 3000,
+          }
+        );
         setFormData({
           truck: "",
           driver: "",
@@ -65,24 +79,29 @@ const TripModal = ({ isOpen, onClose }) => {
           destination: "",
           fuel: "",
           liters: "",
-          departureDate: formatDateToDatetimeLocal(
-            new Date(new Date().getFullYear(), 0, 1)
-          ),
+          departureDate: formatDateToDatetimeLocal(new Date()),
           status: "",
         });
 
         onClose();
       } else {
-        toast.error(result.error || "Error al crear el viaje", {
-          position: "bottom-center",
-          autoClose: 3000,
-        });
+        toast.error(
+          result.error ||
+            (trip ? "Error al actualizar el viaje" : "Error al crear el viaje"),
+          {
+            position: "bottom-center",
+            autoClose: 3000,
+          }
+        );
       }
     } catch (error) {
-      toast.error("Error al crear el viaje", {
-        position: "bottom-center",
-        autoClose: 3000,
-      });
+      toast.error(
+        trip ? "Error al actualizar el viaje" : "Error al crear el viaje",
+        {
+          position: "bottom-center",
+          autoClose: 3000,
+        }
+      );
     } finally {
       setLoading(false);
     }
@@ -96,8 +115,7 @@ const TripModal = ({ isOpen, onClose }) => {
   };
 
   const handleClose = () => {
-    if (loading) return; // Evitamos que se cierre si está cargando
-
+    if (loading) return;
     onClose();
     setFormData({
       truck: "",
@@ -106,9 +124,7 @@ const TripModal = ({ isOpen, onClose }) => {
       destination: "",
       fuel: "",
       liters: "",
-      departureDate: formatDateToDatetimeLocal(
-        new Date(new Date().getFullYear(), 0, 1)
-      ),
+      departureDate: formatDateToDatetimeLocal(new Date()),
       status: "",
     });
   };
@@ -129,7 +145,9 @@ const TripModal = ({ isOpen, onClose }) => {
       >
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-800">Nuevo Viaje</h2>
+            <h2 className="text-2xl font-bold text-gray-800">
+              {trip ? "Editar Viaje" : "Nuevo Viaje"}
+            </h2>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -382,22 +400,22 @@ const TripModal = ({ isOpen, onClose }) => {
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-6 py-2 text-gray-700 cursor-pointer hover:text-gray-900 font-medium transition-colors disabled:opacity-50"
+                className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] cursor-pointer text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 text-sm font-medium text-white bg-[var(--orange)] rounded-xl hover:bg-[var(--orange-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
                 {loading ? (
-                  <div className="flex items-center">
+                  <span className="flex items-center gap-2">
                     <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-4 h-4 animate-spin"
                       fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
                       <circle
@@ -414,10 +432,12 @@ const TripModal = ({ isOpen, onClose }) => {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    Guardando...
-                  </div>
+                    Procesando...
+                  </span>
+                ) : trip ? (
+                  "Guardar cambios"
                 ) : (
-                  "Guardar"
+                  "Crear viaje"
                 )}
               </button>
             </div>

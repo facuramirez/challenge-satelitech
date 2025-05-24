@@ -14,13 +14,9 @@ const colors = {
     colorFrom: "text-sky-400",
     colorTo: "text-sky-400",
   },
-  "20000-29999": {
+  "20000-30000": {
     colorFrom: "text-lime-400",
     colorTo: "text-lime-400",
-  },
-  "30000-34999": {
-    colorFrom: "text-amber-400",
-    colorTo: "text-amber-400",
   },
 };
 

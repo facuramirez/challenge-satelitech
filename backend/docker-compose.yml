@@ -9,9 +9,9 @@ services:
       - NODE_ENV=production
       - PORT=4000
       - MONGODB_URI=mongodb://mongodb:27017/viajes_db
-      - JWT_SECRET=tu_secreto_super_seguro
-      - JWT_REFRESH_SECRET=tu_refresh_secreto_super_seguro
-      - COOKIE_SECRET=tu_cookie_secreto_super_seguro
+      - JWT_SECRET=prod-jwt
+      - JWT_REFRESH_SECRET=prod-refresh-jwt
+      - COOKIE_SECRET=prod-cookie-secret
     depends_on:
       - mongodb
     volumes:

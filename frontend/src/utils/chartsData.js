@@ -18,8 +18,7 @@ export const getFiltersAndMappedTrips = (trips) => {
         ["Litros", "Cantidad"],
         ["<10000", 0],
         ["10000-19999", 0],
-        ["20000-29999", 0],
-        ["30000-35000", 0],
+        ["20000-30000", 0],        
       ];
     
       trips.forEach((trip) => {
@@ -29,11 +28,9 @@ export const getFiltersAndMappedTrips = (trips) => {
           litersData[1][1]++;
         } else if (liters < 20000) {
           litersData[2][1]++;
-        } else if (liters < 30000) {
+        } else if (liters <= 30000) {
           litersData[3][1]++;
-        } else if (liters <= 35000) {
-          litersData[4][1]++;
-        }
+        } 
       });     
     
       const statusMap = {

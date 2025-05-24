@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import useTripStore from "../store/useTripStore";
 import TripTableSkeleton from "./TripTableSkeleton";
 import TripModal from "./TripModal";
+import ConfirmationModal from "./ConfirmationModal";
 import { toast } from "react-toastify";
 
 const SortArrow = ({ direction }) => {
@@ -67,9 +68,15 @@ export const TripsTable = () => {
     setPageSize,
     sortTrips,
     sortConfig,
+    deleteTrip,
+    updateTrip,
   } = useTripStore();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [tripToDelete, setTripToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const loadTrips = async () => {
@@ -89,12 +96,43 @@ export const TripsTable = () => {
     loadTrips();
   }, []);
 
-  const handleOpenModal = () => {
+  const handleOpenModal = (trip = null) => {
+    setSelectedTrip(trip);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
+    setSelectedTrip(null);
     setIsModalOpen(false);
+  };
+
+  const handleOpenDeleteModal = (trip) => {
+    setTripToDelete(trip);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setTripToDelete(null);
+    setIsDeleteModalOpen(false);
+  };
+
+  const handleDelete = async () => {
+    if (!tripToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteTrip(tripToDelete._id);
+      toast.success("Viaje eliminado correctamente", {
+        position: "bottom-center",
+      });
+      handleCloseDeleteModal();
+    } catch (error) {
+      toast.error("Error al eliminar el viaje", {
+        position: "bottom-center",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (loading) {
@@ -106,8 +144,9 @@ export const TripsTable = () => {
       <div className="flex flex-row justify-between items-center gap-2">
         <span className="text-lg font-bold text-gray-700">Viajes:</span>
         <button
-          onClick={handleOpenModal}
-          className="text-white px-4 py-2 rounded-md bg-[var(--orange)] hover:bg-[var(--orange-hover)] transition-colors duration-200 cursor-pointer"
+          onClick={() => handleOpenModal()}
+          className="px-3 py-1 text-base text-white bg-[var(--orange)] hover:bg-[var(--orange)] rounded-md transition-colors cursor-pointer"
+          // className="text-white px-4 py-1 rounded-md bg-[var(--orange)] hover:bg-[var(--orange-hover)] transition-colors duration-200 cursor-pointer"
         >
           Nuevo viaje
         </button>
@@ -116,7 +155,7 @@ export const TripsTable = () => {
         <table className="min-w-full w-max table table-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap min-w-[80px]">
+              <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap min-w-fit">
                 #
               </th>
               <SortableHeader
@@ -167,41 +206,65 @@ export const TripsTable = () => {
                 sortConfig={sortConfig}
                 onSort={sortTrips}
               />
+              <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {trips.map((trip, index) => (
-              <tr key={trip._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {(currentPage - 1) * pageSize + index + 1}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">{trip.truck}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{trip.driver}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{trip.origin}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {trip.destination}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">{trip.fuel}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{trip.liters}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {new Date(trip.departureDate).toLocaleString()}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      {
-                        sin_iniciar: "bg-yellow-100 text-yellow-800",
-                        en_transito: "bg-blue-100 text-blue-800",
-                        completado: "bg-green-100 text-green-800",
-                        cancelado: "bg-red-100 text-red-800",
-                      }[trip.status]
-                    }`}
-                  >
-                    {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {trips.map((trip, index) => {
+              const status = (
+                trip.status.charAt(0).toUpperCase() + trip.status.slice(1)
+              ).replaceAll("_", " ");
+              return (
+                <tr key={trip._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {(currentPage - 1) * pageSize + index + 1}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{trip.truck}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{trip.driver}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{trip.origin}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {trip.destination}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{trip.fuel}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{trip.liters}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {new Date(trip.departureDate).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        {
+                          sin_iniciar: "bg-yellow-100 text-yellow-800",
+                          en_transito: "bg-blue-100 text-blue-800",
+                          completado: "bg-green-100 text-green-800",
+                          cancelado: "bg-red-100 text-red-800",
+                        }[trip.status]
+                      }`}
+                    >
+                      {status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleOpenModal(trip)}
+                        className="px-3 py-1 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded-md transition-colors cursor-pointer"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleOpenDeleteModal(trip)}
+                        className="px-3 py-1 text-sm text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors cursor-pointer"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -261,10 +324,26 @@ export const TripsTable = () => {
         </div>
       </div>
 
-      {/* Modal de nuevo viaje */}
+      {/* Modal de viaje (nuevo/editar) */}
       {isModalOpen && (
-        <TripModal isOpen={isModalOpen} onClose={handleCloseModal} />
+        <TripModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          trip={selectedTrip}
+        />
       )}
+
+      {/* Modal de confirmación de eliminación */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleDelete}
+        title="Eliminar Viaje"
+        message={`¿Está seguro que desea eliminar el viaje del camión ${
+          tripToDelete?.truck || ""
+        } con destino a ${tripToDelete?.destination || ""}?`}
+        loading={isDeleting}
+      />
     </div>
   );
 };
