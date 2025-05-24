@@ -2,19 +2,19 @@
 
 Este proyecto fue desarrollado como parte de un **challenge técnico** solicitado para el proceso de selección de **Satelitech**.
 
-## 🚀 Tecnologías utilizadas
+### 🚀 Tecnologías utilizadas
 
 Se utilizaron las tecnologías requeridas por la consigna:
 
-- **Frontend:** React + TailwindCSS  
-- **Backend:** Node.js + Express  
-- **Base de datos:** MongoDB  
-- **Autenticación:** JWT  
+- **Frontend:** React + TailwindCSS
+- **Backend:** Node.js + Express
+- **Base de datos:** MongoDB
+- **Autenticación:** JWT
 - **Infraestructura:** Docker (incluyendo la base de datos)
 
 ---
 
-## ✅ Funcionalidades implementadas
+### ✅ Funcionalidades implementadas
 
 Durante el desarrollo se tuvo especial atención en cumplir todos los requisitos mínimos establecidos:
 
@@ -28,7 +28,7 @@ Durante el desarrollo se tuvo especial atención en cumplir todos los requisitos
 
 ---
 
-## 📊 Dashboard principal
+### 📊 Dashboard principal
 
 El sistema cuenta con una **interfaz clara y funcional** donde se puede:
 
@@ -39,49 +39,74 @@ El sistema cuenta con una **interfaz clara y funcional** donde se puede:
 
 ---
 
-## 💾 Persistencia de datos
+### 💾 Persistencia de datos
 
 Gracias al uso de **volúmenes en Docker**, los datos permanecerán persistentes incluso si la aplicación se detiene.
 
 ---
 
-## 🧠 Herramientas utilizadas
-
-Durante el desarrollo se aprovechó la potencia de **Cursor IDE**, lo cual permitió una experiencia de trabajo altamente eficiente, clara y fluida.
-
----
-
-## 🛠️ Instrucciones para ejecutar el proyecto
+### 🛠️ Instrucciones para ejecutar el proyecto
 
 1. **Clonar este repositorio**
+
    ```bash
    git clone https://github.com/tu-usuario/tu-repo.git
    ```
 
+###
+
 2. **Asegurarse de tener instalado Docker**  
    Puedes descargarlo desde: https://www.docker.com/products/docker-desktop/
 
+###
+
 3. **Abrir una terminal** y situarse en la carpeta raíz del proyecto (ej: `challenge`)
+
    ```bash
    cd challenge
    ```
 
+###
+
 4. **Levantar los contenedores con Docker**
+
    ```bash
    docker compose up -d
    ```
 
+###
+
 5. **Acceder a la aplicación** desde el navegador en:  
    👉 [http://localhost:3000](http://localhost:3000)
 
+###
+
 6. **Para detener la aplicación**
+
    ```bash
    docker compose down
    ```
 
+###
+
+7. Crear un archivo `.env` en la raíz del proyecto con el siguiente contenido:
+
+```env
+PORT=4000
+NODE_ENV=production
+MONGODB_URI=mongodb://mongodb:27017/viajes_db
+JWT_SECRET=prod-jwt
+JWT_REFRESH_SECRET=prod-refresh-jwt
+COOKIE_SECRET=prod-cookie-secret
+ORIGIN=http://localhost:3000
+```
+
+> ⚠️ **Aviso:** Las variables aquí expuestas son de uso exclusivamente académico y fueron incluidas como parte de este challenge técnico.  
+> No contienen información sensible real y **no deben utilizarse en entornos productivos**.
+
 ---
 
-## 👨‍💻 Autor
+### 👨‍💻 Autor
 
 **Facundo Ramírez**  
-*Desarrollador Full Stack*
+_Desarrollador Full Stack_
