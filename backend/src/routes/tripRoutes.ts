@@ -7,6 +7,10 @@ import {
   deleteTrip,
 } from "../controllers/tripController";
 import { auth } from "../middleware/auth";
+import {
+  createTripsValidator,
+  updateTripsValidator,
+} from "../validators/tripsValidators";
 
 const router = Router();
 
@@ -20,10 +24,10 @@ router.get("/", getTrips);
 router.get("/:id", getTripById);
 
 // Crear un nuevo viaje
-router.post("/", createTrip);
+router.post("/", createTripsValidator, createTrip);
 
 // Actualizar un viaje
-router.put("/:id", updateTrip);
+router.put("/:id", updateTripsValidator, updateTrip);
 
 // Eliminar un viaje
 router.delete("/:id", deleteTrip);

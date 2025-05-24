@@ -41,7 +41,6 @@ const TripModal = ({ isOpen, onClose, trip }) => {
   const handleErrors = () => {
     // Validar litros
     const liters = Number(formData.liters);
-    console.log(liters);
     const negativeLiters = liters > 0 && liters <= 30000;
 
     if (!negativeLiters) {
@@ -55,7 +54,7 @@ const TripModal = ({ isOpen, onClose, trip }) => {
     // Validar fecha
     const departureDate = new Date(formData.departureDate);
     const currentDate = new Date();
-    if (departureDate < currentDate) {
+    if (!trip && departureDate < currentDate) {
       toast.error(
         "La fecha de salida no puede ser anterior a la fecha actual",
         {
@@ -94,6 +93,8 @@ const TripModal = ({ isOpen, onClose, trip }) => {
       let result;
 
       if (trip) {
+        delete formData.driver;
+        delete formData.departureDate;
         result = await updateTrip(trip._id, formData);
       } else {
         result = await createTrip(formData);
@@ -241,8 +242,8 @@ const TripModal = ({ isOpen, onClose, trip }) => {
                   name="driver"
                   value={formData.driver}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all appearance-none bg-white"
-                  disabled={loading}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl disabled:bg-gray-100 disabled:pointer-events-none focus:border-[var(--blue)] focus:outline-none transition-all appearance-none bg-white"
+                  disabled={loading || trip}
                 >
                   <option value="">-</option>
                   <option value="Pablo Mendez">Pablo Mendez</option>
@@ -386,8 +387,8 @@ const TripModal = ({ isOpen, onClose, trip }) => {
                   value={formData.departureDate}
                   onChange={handleChange}
                   min={formatDateToDatetimeLocal(new Date())}
-                  className="peer w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all"
-                  disabled={loading}
+                  className="peer w-full px-4 py-3 border-2 border-gray-300 rounded-xl disabled:bg-gray-100 disabled:pointer-events-none focus:border-[var(--blue)] focus:outline-none transition-all"
+                  disabled={loading || trip}
                 />
                 <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">
                   Fecha de Salida
