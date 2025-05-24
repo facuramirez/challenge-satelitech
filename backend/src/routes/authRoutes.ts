@@ -10,7 +10,6 @@ router.post("/logout", auth, logout);
 router.post("/refresh", auth, async (req, res) => {
   try {
     const { _id, email } = req.user;
-    console.log(req.user);
     const { accessToken: newToken, refreshToken: newRefreshToken } =
       await generateTokens({
         userId: _id,

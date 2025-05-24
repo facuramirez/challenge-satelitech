@@ -73,9 +73,9 @@ export const Register = () => {
       );
 
       toast.success("¡Registro exitoso!");
-      const { user } = response.data;
-      setAuth(user);
-      navigate("/viajes");
+      // const { user } = response.data;
+      // setAuth(user);
+      navigate("/ingreso");
     } catch (error) {
       toast.error(
         error.response.data.message || "Error al registrar el usuario"

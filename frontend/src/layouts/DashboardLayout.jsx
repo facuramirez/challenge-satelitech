@@ -44,7 +44,9 @@ export const DashboardLayout = ({ children }) => {
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      <main className="lg:ml-[14rem] mt-16 py-6 px-8">{children}</main>
+      <main className="lg:ml-[14rem] mt-16 py-6 px-8 min-h-[calc(100vh-4rem)]">
+        {children}
+      </main>
     </>
   );
 };

@@ -12,7 +12,7 @@ const TripModal = ({ isOpen, onClose, trip }) => {
     origin: "",
     destination: "",
     fuel: "",
-    liters: "",
+    liters: 0,
     departureDate: formatDateToDatetimeLocal(new Date()),
     status: "",
   });
@@ -39,21 +39,56 @@ const TripModal = ({ isOpen, onClose, trip }) => {
   }, [isOpen, trip]);
 
   const handleErrors = () => {
-    return Object.entries(formData).some(
-      ([key, value]) =>
-        value === "" || (key === "liters" && value > parseInt(30000))
+    // Validar litros
+    const liters = Number(formData.liters);
+    console.log(liters);
+    const negativeLiters = liters > 0 && liters <= 30000;
+
+    if (!negativeLiters) {
+      toast.error("Litros deben ser mayores a 0 y menores o iguales a 30000", {
+        position: "bottom-center",
+        autoClose: 3000,
+      });
+      return true;
+    }
+
+    // Validar fecha
+    const departureDate = new Date(formData.departureDate);
+    const currentDate = new Date();
+    if (departureDate < currentDate) {
+      toast.error(
+        "La fecha de salida no puede ser anterior a la fecha actual",
+        {
+          position: "bottom-center",
+          autoClose: 3000,
+        }
+      );
+      return true;
+    }
+
+    // Validar campos vacíos
+    const emptyFields = Object.entries(formData).some(
+      ([, value]) => value === ""
     );
+
+    if (emptyFields) {
+      toast.error("Todos los campos son requeridos", {
+        position: "bottom-center",
+        autoClose: 3000,
+      });
+      return true;
+    }
+
+    return false;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (handleErrors()) {
-      return toast.error("Todos los campos son requeridos", {
-        position: "bottom-center",
-        autoClose: 3000,
-      });
+      return;
     }
+
     try {
       setLoading(true);
       let result;
@@ -350,9 +385,7 @@ const TripModal = ({ isOpen, onClose, trip }) => {
                   name="departureDate"
                   value={formData.departureDate}
                   onChange={handleChange}
-                  min={formatDateToDatetimeLocal(
-                    new Date(new Date().getFullYear(), 0, 1)
-                  )}
+                  min={formatDateToDatetimeLocal(new Date())}
                   className="peer w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all"
                   disabled={loading}
                 />

@@ -43,7 +43,12 @@ export const getTrips = async (
 
     const paramsToQuery: FilterQuery<ITrip> = {};
     params.forEach(([key, value]) => {
-      paramsToQuery[key] = value;
+      // Si el campo es driver, usar regex para búsqueda parcial
+      if (key === "driver") {
+        paramsToQuery[key] = { $regex: value, $options: "i" };
+      } else {
+        paramsToQuery[key] = value;
+      }
     });
 
     // Si ambos campos de fecha están presentes, agregar filtro por rango
@@ -183,9 +188,30 @@ export const createTrip = async (
       return;
     }
 
+    // Validar que los litros no excedan 30000
+    if (Number(tripData.liters) > 30000) {
+      res.status(400).json({
+        message: "Error de validación",
+        error: "La cantidad de litros no puede ser mayor a 30000",
+      });
+      return;
+    }
+
+    // Validar que la fecha de salida no sea anterior a la fecha actual
+    const departureDate = new Date(tripData.departureDate);
+    const currentDate = new Date();
+
+    if (departureDate < currentDate) {
+      res.status(400).json({
+        message: "Error de validación",
+        error: "La fecha de salida no puede ser anterior a la fecha actual",
+      });
+      return;
+    }
+
     const trip = new Trip({
       ...tripData,
-      status: tripData.status || "pendiente",
+      status: tripData.status || "sin_iniciar",
     });
 
     await trip.save();

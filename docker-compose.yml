@@ -9,9 +9,8 @@ services:
       - NODE_ENV=production      
     volumes:
       - ./src:/usr/src/app/src
-      - ./dist:/usr/src/app/dist
     networks:
-      - frontend-network
+      - app-network
     restart: unless-stopped
 
   app:
@@ -31,8 +30,7 @@ services:
     depends_on:
       - mongodb
     volumes:
-      - ./src:/usr/src/app/src
-      - ./dist:/usr/src/app/dist
+      - ./src:/usr/src/app/src 
     networks:
       - app-network
     restart: unless-stopped
@@ -47,9 +45,7 @@ services:
       - app-network
     restart: unless-stopped
 
-networks:
-  frontend-network:
-    driver: bridge 
+networks:  
   app-network:
     driver: bridge
 

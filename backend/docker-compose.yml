@@ -6,17 +6,17 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - NODE_ENV=production
-      - PORT=4000
-      - MONGODB_URI=mongodb://mongodb:27017/viajes_db
-      - JWT_SECRET=prod-jwt
-      - JWT_REFRESH_SECRET=prod-refresh-jwt
-      - COOKIE_SECRET=prod-cookie-secret
-    depends_on:
+      - MONGODB_URI=${MONGODB_URI}
+      - PORT=${PORT}
+      - ORIGIN=${ORIGIN}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - COOKIE_SECRET=${COOKIE_SECRET}
+      - NODE_ENV=${NODE_ENV}
       - mongodb
     volumes:
       - ./src:/usr/src/app/src
-      - ./dist:/usr/src/app/dist
+#      - ./dist:/usr/src/app/dist
     networks:
       - app-network
     restart: unless-stopped
