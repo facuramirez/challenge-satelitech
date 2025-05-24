@@ -1,112 +1,431 @@
-import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogHeader,
-  DialogBody,
-  DialogFooter,
-  Button,
-  Input,
-  Select,
-  Option,
-} from "@material-tailwind/react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import useTripStore from "../store/useTripStore";
+import { formatDateToDatetimeLocal } from "../utils/formatDatePicker";
 
-export const TripModal = ({ isOpen, onClose, onSave, trip }) => {
+const TripModal = ({ isOpen, onClose }) => {
+  const createTrip = useTripStore((state) => state.createTrip);
   const [formData, setFormData] = useState({
+    truck: "",
     driver: "",
+    origin: "",
+    destination: "",
     fuel: "",
+    liters: "",
+    departureDate: formatDateToDatetimeLocal(
+      new Date(new Date().getFullYear(), 0, 1)
+    ),
     status: "",
-    date: new Date().toISOString().split("T")[0],
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (trip) {
+    if (!isOpen) {
       setFormData({
-        ...trip,
-        date: new Date(trip.date).toISOString().split("T")[0],
+        truck: "",
+        driver: "",
+        origin: "",
+        destination: "",
+        fuel: "",
+        liters: "",
+        departureDate: formatDateToDatetimeLocal(new Date()),
+        status: "",
       });
     }
-  }, [trip]);
+  }, [isOpen]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleErrors = () => {
+    return Object.entries(formData).some(
+      ([key, value]) =>
+        value === "" || (key === "liters" && value > parseInt(30000))
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (handleErrors()) {
+      return toast.error("Todos los campos son requeridos", {
+        position: "bottom-center",
+        autoClose: 3000,
+      });
+    }
     try {
-      if (trip) {
-        await axios.put(`http://localhost:3000/api/trips/${trip.id}`, formData);
+      setLoading(true);
+      const result = await createTrip(formData);
+      if (result.success) {
+        toast.success("Viaje creado exitosamente", {
+          position: "bottom-center",
+          autoClose: 3000,
+        });
+        setFormData({
+          truck: "",
+          driver: "",
+          origin: "",
+          destination: "",
+          fuel: "",
+          liters: "",
+          departureDate: formatDateToDatetimeLocal(
+            new Date(new Date().getFullYear(), 0, 1)
+          ),
+          status: "",
+        });
+
+        onClose();
       } else {
-        await axios.post("http://localhost:3000/api/trips", formData);
+        toast.error(result.error || "Error al crear el viaje", {
+          position: "bottom-center",
+          autoClose: 3000,
+        });
       }
-      onSave();
     } catch (error) {
-      console.error("Error al guardar el viaje:", error);
+      toast.error("Error al crear el viaje", {
+        position: "bottom-center",
+        autoClose: 3000,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleClose = () => {
+    if (loading) return; // Evitamos que se cierre si está cargando
+
+    onClose();
+    setFormData({
+      truck: "",
+      driver: "",
+      origin: "",
+      destination: "",
+      fuel: "",
+      liters: "",
+      departureDate: formatDateToDatetimeLocal(
+        new Date(new Date().getFullYear(), 0, 1)
+      ),
+      status: "",
+    });
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} handler={onClose} size="md">
-      <form onSubmit={handleSubmit}>
-        <DialogHeader>{trip ? "Editar Viaje" : "Nuevo Viaje"}</DialogHeader>
-        <DialogBody divider className="grid gap-4">
-          <Input
-            label="Conductor"
-            name="driver"
-            value={formData.driver}
-            onChange={handleChange}
-            required
-          />
-          <Select
-            label="Combustible"
-            name="fuel"
-            value={formData.fuel}
-            onChange={(value) =>
-              handleChange({ target: { name: "fuel", value } })
-            }
-            required
-          >
-            <Option value="gasolina">Gasolina</Option>
-            <Option value="diesel">Diesel</Option>
-            <Option value="gnc">GNC</Option>
-          </Select>
-          <Select
-            label="Estado"
-            name="status"
-            value={formData.status}
-            onChange={(value) =>
-              handleChange({ target: { name: "status", value } })
-            }
-            required
-          >
-            <Option value="pendiente">Pendiente</Option>
-            <Option value="en_curso">En Curso</Option>
-            <Option value="completado">Completado</Option>
-            <Option value="cancelado">Cancelado</Option>
-          </Select>
-          <Input
-            type="date"
-            label="Fecha"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            required
-          />
-        </DialogBody>
-        <DialogFooter className="space-x-2">
-          <Button variant="outlined" color="red" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button type="submit" variant="gradient" color="blue">
-            Guardar
-          </Button>
-        </DialogFooter>
-      </form>
-    </Dialog>
+    <div
+      className={`fixed inset-0 z-[9999] flex items-center justify-center transition-all duration-300`}
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+      }}
+    >
+      <div
+        className={`relative bg-white w-full max-w-md transform transition-all duration-300 rounded-2xl shadow-2xl`}
+      >
+        <div className="p-8">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-800">Nuevo Viaje</h2>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="flex flex-col gap-4">
+              <div className="relative">
+                <select
+                  name="truck"
+                  value={formData.truck}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all appearance-none bg-white"
+                  disabled={loading}
+                >
+                  <option value="">-</option>
+                  <option value="ABC123">ABC123</option>
+                  <option value="JYU246">JYU246</option>
+                  <option value="KUN946">KUN946</option>
+                </select>
+                <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">
+                  Camión
+                </label>
+                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div className="relative">
+                <select
+                  name="driver"
+                  value={formData.driver}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all appearance-none bg-white"
+                  disabled={loading}
+                >
+                  <option value="">-</option>
+                  <option value="Pablo Mendez">Pablo Mendez</option>
+                  <option value="Gerardo Benitez">Gerardo Benitez</option>
+                  <option value="Cristian Gonzalez">Cristian Gonzalez</option>
+                </select>
+                <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">
+                  Conductor
+                </label>
+                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div className="relative">
+                <select
+                  name="origin"
+                  value={formData.origin}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all appearance-none bg-white"
+                  disabled={loading}
+                >
+                  <option value="">-</option>
+                  <option value="Planta A">Planta A</option>
+                  <option value="Planta B">Planta B</option>
+                  <option value="Planta C">Planta C</option>
+                </select>
+                <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">
+                  Origen
+                </label>
+                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div className="relative">
+                <select
+                  name="destination"
+                  value={formData.destination}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all appearance-none bg-white"
+                  disabled={loading}
+                >
+                  <option value="">-</option>
+                  <option value="Córdoba">Córdoba</option>
+                  <option value="Buenos Aires">Buenos Aires</option>
+                  <option value="Santa Fe">Santa Fe</option>
+                </select>
+                <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">
+                  Destino
+                </label>
+                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div className="relative">
+                <select
+                  name="fuel"
+                  value={formData.fuel}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all appearance-none bg-white"
+                  disabled={loading}
+                >
+                  <option value="">-</option>
+                  <option value="Diesel">Diesel</option>
+                  <option value="Gasolina">Gasolina</option>
+                  <option value="Biodiesel">Biodiesel</option>
+                  <option value="GNC">GNC</option>
+                </select>
+                <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">
+                  Combustible
+                </label>
+                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div className="relative">
+                <input
+                  type="number"
+                  name="liters"
+                  value={formData.liters}
+                  onChange={handleChange}
+                  className="peer w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all placeholder-transparent"
+                  placeholder="Litros"
+                  disabled={loading}
+                />
+                <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-[var(--blue)]">
+                  Litros
+                </label>
+              </div>
+              <div className="relative col-span-2">
+                <input
+                  type="datetime-local"
+                  name="departureDate"
+                  value={formData.departureDate}
+                  onChange={handleChange}
+                  min={formatDateToDatetimeLocal(
+                    new Date(new Date().getFullYear(), 0, 1)
+                  )}
+                  className="peer w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all"
+                  disabled={loading}
+                />
+                <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">
+                  Fecha de Salida
+                </label>
+              </div>
+            </div>
+
+            <div className="relative">
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all appearance-none bg-white"
+                disabled={loading}
+              >
+                <option value="">-</option>
+                <option value="sin_iniciar">Sin iniciar</option>
+                <option value="en_transito">En tránsito</option>
+                <option value="cancelado">Cancelado</option>
+                <option value="completado">Completado</option>
+              </select>
+              <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">
+                Estado
+              </label>
+              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-4 mt-8">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-6 py-2 text-gray-700 cursor-pointer hover:text-gray-900 font-medium transition-colors disabled:opacity-50"
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] cursor-pointer text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Guardando...
+                  </div>
+                ) : (
+                  "Guardar"
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };
+
+export default TripModal;

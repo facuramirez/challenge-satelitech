@@ -17,7 +17,8 @@ import {
   PowerIcon,
 } from "@heroicons/react/24/solid";
 import { ChartBarIcon } from "@heroicons/react/24/outline";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import useAuthStore from "../store/useAuthStore";
 
 const links = [
   {
@@ -47,10 +48,12 @@ const links = [
 
 export const Sidebar = ({ isOpen, onClose }) => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
 
   return (
     <div
-      className={`fixed left-0 top-16 h-[calc(100vh-64px)] w-[14rem] bg-[var(--blue)] shadow-lg text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 z-80 ${
+      className={`fixed left-0 top-16 h-[calc(100vh-64px)] w-[14rem] bg-[var(--blue-hover)] shadow-lg text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 z-80 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
@@ -58,8 +61,12 @@ export const Sidebar = ({ isOpen, onClose }) => {
         {links.map(({ name, href, Icon, tailwindClasses }) => (
           <Link
             key={href}
-            to={href}
+            to={href === "/logout" ? pathname : href}
             onClick={(e) => {
+              if (href === "/logout") {
+                logout();
+                navigate("/");
+              }
               if (window.innerWidth < 1024) {
                 // lg breakpoint
                 onClose();
@@ -76,47 +83,6 @@ export const Sidebar = ({ isOpen, onClose }) => {
           </Link>
         ))}
       </div>
-      {/* <List>
-                <ListItem>
-                    <ListItemPrefix>
-                        <PresentationChartBarIcon className="h-5 w-5" />
-                    </ListItemPrefix>
-                    Dashboard
-                </ListItem>
-                <ListItem>
-                    <ListItemPrefix>
-                        <ShoppingBagIcon className="h-5 w-5" />
-                    </ListItemPrefix>
-                    E-Commerce
-                </ListItem>
-                <ListItem>
-                    <ListItemPrefix>
-                        <InboxIcon className="h-5 w-5" />
-                    </ListItemPrefix>
-                    Inbox
-                    <ListItemSuffix>
-                        <Chip value="14" size="sm" variant="ghost" color="blue-gray" className="rounded-full" />
-                    </ListItemSuffix>
-                </ListItem>
-                <ListItem>
-                    <ListItemPrefix>
-                        <UserCircleIcon className="h-5 w-5" />
-                    </ListItemPrefix>
-                    Profile
-                </ListItem>
-                <ListItem>
-                    <ListItemPrefix>
-                        <Cog6ToothIcon className="h-5 w-5" />
-                    </ListItemPrefix>
-                    Settings
-                </ListItem>
-                <ListItem>
-                    <ListItemPrefix>
-                        <PowerIcon className="h-5 w-5" />
-                    </ListItemPrefix>
-                    Log Out
-                </ListItem>
-            </List> */}
     </div>
   );
 };

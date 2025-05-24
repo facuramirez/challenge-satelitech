@@ -1,23 +1,43 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { AuthRoutes } from './routes/AuthRoutes';
-import { AppRoutes } from './routes/AppRoutes';
-import { useState } from 'react'
-import './App.css'
+import { useEffect } from "react";
+import { AppRoutes } from "./routes/AppRoutes";
+import useAuthStore from "./store/useAuthStore";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const loading = useAuthStore((state) => state.loading);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--blue)]"></div>
+      </div>
+    );
+  }
 
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/auth/*" element={<AuthRoutes />} />
-          <Route path="/*" element={<AppRoutes />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
-  )
+    <>
+      <AppRoutes />
+      <ToastContainer
+        position="bottom-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </>
+  );
 }
 
-export default App
+export default App;

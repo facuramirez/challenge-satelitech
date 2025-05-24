@@ -1,175 +1,270 @@
-import { useState } from "react";
-import { NewTripModal } from "./NewTripModal";
+import React, { useEffect, useState } from "react";
+import useTripStore from "../store/useTripStore";
+import TripTableSkeleton from "./TripTableSkeleton";
+import TripModal from "./TripModal";
+import { toast } from "react-toastify";
+
+const SortArrow = ({ direction }) => {
+  if (!direction) return null;
+
+  return direction === "asc" ? (
+    <svg
+      className="w-4 h-4 ml-1 inline-block absolute top-0 right-0"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 15l7-7 7 7"
+      />
+    </svg>
+  ) : (
+    <svg
+      className="w-4 h-4 ml-1 inline-block absolute top-0 right-0"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M19 9l-7 7-7-7"
+      />
+    </svg>
+  );
+};
+
+const SortableHeader = ({ label, field, sortConfig, onSort }) => {
+  return (
+    <th
+      className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-200 transition-colors"
+      onClick={() => onSort(field)}
+    >
+      <div className="relative">
+        {label}
+        <SortArrow
+          direction={sortConfig.key === field ? sortConfig.direction : null}
+        />
+      </div>
+    </th>
+  );
+};
 
 export const TripsTable = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const {
+    trips,
+    loading,
+    error,
+    fetchTrips,
+    currentPage,
+    totalPages,
+    pageSize,
+    setPage,
+    setPageSize,
+    sortTrips,
+    sortConfig,
+  } = useTripStore();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Simulación de datos para el ejemplo
-  const data = Array(100)
-    .fill(null)
-    .map((_, index) => ({
-      id: index + 1,
-      truck: `Camión ${index + 1}`,
-      driver: `Conductor ${index + 1}`,
-      category: `Categoría ${(index % 5) + 1}`,
-      status: ["Pendiente", "En curso", "Completado", "Cancelado"][index % 4],
-      fuel: ["Diesel", "Gasolina", "GNC"][index % 3],
-      origin: `Ciudad ${(index % 10) + 1}`,
-    }));
+  useEffect(() => {
+    const loadTrips = async () => {
+      try {
+        await fetchTrips();
+      } catch (err) {
+        toast.error(
+          "Error al cargar los viajes. Por favor, intente nuevamente.",
+          {
+            position: "bottom-center",
+            autoClose: 5000,
+          }
+        );
+      }
+    };
 
-  // Cálculo de la paginación
-  const totalPages = Math.ceil(data.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const currentData = data.slice(startIndex, endIndex);
+    loadTrips();
+  }, []);
 
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
   };
 
-  const handlePageSizeChange = (e) => {
-    const newSize = Number(e.target.value);
-    setPageSize(newSize);
-    setCurrentPage(1); // Reset a la primera página cuando cambia el tamaño
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
   };
+
+  if (loading) {
+    return <TripTableSkeleton />;
+  }
 
   return (
-    <div className="flex flex-col gap-4 p-6 shadow-sm bg-white rounded-lg">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col gap-4 p-6 shadow shadow-sm">
+      <div className="flex flex-row justify-between items-center gap-2">
         <span className="text-lg font-bold text-gray-700">Viajes:</span>
         <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-[var(--orange)] hover:bg-[var(--orange-hover)] py-2 text-white px-4 rounded-lg md:w-fit cursor-pointer"
+          onClick={handleOpenModal}
+          className="text-white px-4 py-2 rounded-md bg-[var(--orange)] hover:bg-[var(--orange-hover)] transition-colors duration-200 cursor-pointer"
         >
           Nuevo viaje
         </button>
       </div>
-
-      {/* Contenedor con scroll horizontal */}
-      <div className="w-full overflow-x-auto">
-        <div className="min-w-[1000px]">
-          {/* Ancho mínimo para asegurar scroll en móviles */}
-          <table className="w-full table-auto border-collapse table table-md">
-            <thead className="bg-gray-50">
-              <tr className="text-left">
-                <th className="p-4 font-semibold text-gray-600">#</th>
-                <th className="p-4 font-semibold text-gray-600">Camión</th>
-                <th className="p-4 font-semibold text-gray-600">Conductor</th>
-                <th className="p-4 font-semibold text-gray-600">Categoría</th>
-                <th className="p-4 font-semibold text-gray-600">Estado</th>
-                <th className="p-4 font-semibold text-gray-600">Combustible</th>
-                <th className="p-4 font-semibold text-gray-600">Origen</th>
-                <th className="p-4 font-semibold text-gray-600">Acciones</th>
+      <div className="overflow-x-auto">
+        <table className="min-w-full w-max table table-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap min-w-[80px]">
+                #
+              </th>
+              <SortableHeader
+                label="Camión"
+                field="truck"
+                sortConfig={sortConfig}
+                onSort={sortTrips}
+              />
+              <SortableHeader
+                label="Conductor"
+                field="driver"
+                sortConfig={sortConfig}
+                onSort={sortTrips}
+              />
+              <SortableHeader
+                label="Origen"
+                field="origin"
+                sortConfig={sortConfig}
+                onSort={sortTrips}
+              />
+              <SortableHeader
+                label="Destino"
+                field="destination"
+                sortConfig={sortConfig}
+                onSort={sortTrips}
+              />
+              <SortableHeader
+                label="Combustible"
+                field="fuel"
+                sortConfig={sortConfig}
+                onSort={sortTrips}
+              />
+              <SortableHeader
+                label="Litros"
+                field="liters"
+                sortConfig={sortConfig}
+                onSort={sortTrips}
+              />
+              <SortableHeader
+                label="Fecha Salida"
+                field="departureDate"
+                sortConfig={sortConfig}
+                onSort={sortTrips}
+              />
+              <SortableHeader
+                label="Estado"
+                field="status"
+                sortConfig={sortConfig}
+                onSort={sortTrips}
+              />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {trips.map((trip, index) => (
+              <tr key={trip._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {(currentPage - 1) * pageSize + index + 1}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">{trip.truck}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{trip.driver}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{trip.origin}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {trip.destination}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">{trip.fuel}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{trip.liters}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {new Date(trip.departureDate).toLocaleString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      {
+                        sin_iniciar: "bg-yellow-100 text-yellow-800",
+                        en_transito: "bg-blue-100 text-blue-800",
+                        completado: "bg-green-100 text-green-800",
+                        cancelado: "bg-red-100 text-red-800",
+                      }[trip.status]
+                    }`}
+                  >
+                    {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
+                  </span>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {currentData.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  <td className="p-4">{row.id}</td>
-                  <td className="p-4">{row.truck}</td>
-                  <td className="p-4">{row.driver}</td>
-                  <td className="p-4">{row.category}</td>
-                  <td className="p-4">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        row.status === "Completado"
-                          ? "bg-green-100 text-green-800"
-                          : row.status === "En curso"
-                          ? "bg-blue-100 text-blue-800"
-                          : row.status === "Pendiente"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {row.status}
-                    </span>
-                  </td>
-                  <td className="p-4">{row.fuel}</td>
-                  <td className="p-4">{row.origin}</td>
-                  <td className="p-4">
-                    <button className="text-blue-600 hover:text-blue-800">
-                      Editar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Paginación */}
-      <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 mt-4 px-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4 px-2">
         <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-700">Mostrar</span>
           <select
             value={pageSize}
-            onChange={handlePageSizeChange}
-            className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+            onChange={(e) => setPageSize(Number(e.target.value))}
+            className="border border-gray-300 rounded-md text-sm py-1 px-2 focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
           >
             {[5, 10, 25, 50].map((size) => (
               <option key={size} value={size}>
-                Mostrar {size}
+                {size}
               </option>
             ))}
           </select>
-          <span className="text-sm text-gray-600">
-            Página {currentPage} de {totalPages}
-          </span>
+          <span className="text-sm text-gray-700">registros</span>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => handlePageChange(currentPage - 1)}
+            onClick={() => setPage(1)}
             disabled={currentPage === 1}
-            className="cursor-pointer px-3 py-1 border rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
           >
-            Anterior
+            {"<<"}
           </button>
-          {/* Botones de página */}
-          <div className="flex gap-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-
-              return (
-                <button
-                  key={i}
-                  onClick={() => handlePageChange(pageNum)}
-                  className={`cursor-pointer px-3 py-1 border rounded-md ${
-                    currentPage === pageNum
-                      ? "bg-blue-600 text-white"
-                      : "hover:bg-gray-50"
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-          </div>
           <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="cursor-pointer px-3 py-1 border rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => setPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
           >
-            Siguiente
+            {"<"}
+          </button>
+
+          <span className="text-sm text-gray-700">
+            Página {currentPage} de {totalPages || 1}
+          </span>
+
+          <button
+            onClick={() => setPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            {">"}
+          </button>
+          <button
+            onClick={() => setPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            {">>"}
           </button>
         </div>
       </div>
 
-      <NewTripModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      {/* Modal de nuevo viaje */}
+      {isModalOpen && (
+        <TripModal isOpen={isModalOpen} onClose={handleCloseModal} />
+      )}
     </div>
   );
 };

@@ -2,9 +2,11 @@ import { useState } from "react";
 import logo from "../assets/logo-blanco.png";
 import { Sidebar } from "../components/Sidebar";
 import { XMarkIcon, Bars3Icon } from "@heroicons/react/24/solid";
+import useAuthStore from "../store/useAuthStore";
 
 export const DashboardLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { email } = useAuthStore((state) => state.user);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -16,8 +18,8 @@ export const DashboardLayout = ({ children }) => {
         <img src={logo} alt="Logo" className="h-[80%]" />
         <div className="flex flex-row gap-4 items-center justify-center w-fit">
           <div className="flex flex-row gap-2 items-center justify-center w-fit">
-            <span>Usuario:</span>
-            <span>facundo@gmail.com</span>
+            <strong>Usuario:</strong>
+            <span>{email}</span>
           </div>
         </div>
         <button
