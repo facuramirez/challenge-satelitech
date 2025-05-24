@@ -50,7 +50,7 @@ Gracias al uso de **volúmenes en Docker**, los datos permanecerán persistentes
 1. **Clonar este repositorio**
 
    ```bash
-   git clone https://github.com/tu-usuario/tu-repo.git
+   git clone https://github.com/facuramirez/challenge-satelitech
    ```
 
 ###
