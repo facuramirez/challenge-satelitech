@@ -26,12 +26,12 @@ const links = [
     href: "/viajes",
     Icon: PaperAirplaneIcon,
   },
-  {
-    name: "Usuarios",
-    href: "/usuarios",
-    Icon: UserCircleIcon,
-    tailwindClasses: "",
-  },
+  // {
+  //   name: "Usuarios",
+  //   href: "/usuarios",
+  //   Icon: UserCircleIcon,
+  //   tailwindClasses: "",
+  // },
   {
     name: "Estadísticas",
     href: "/estadisticas",

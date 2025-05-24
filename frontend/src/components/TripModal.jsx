@@ -37,7 +37,7 @@ const TripModal = ({ isOpen, onClose }) => {
   const handleErrors = () => {
     return Object.entries(formData).some(
       ([key, value]) =>
-        value === "" || (key === "liters" && value > parseInt(30000))
+        value === "" || (key === "liters" && value > parseInt(35000))
     );
   };
 
