@@ -89,7 +89,7 @@ Gracias al uso de **volúmenes en Docker**, los datos permanecerán persistentes
 
 ###
 
-7. Crear un archivo `.env` en la raíz del proyecto con el siguiente contenido:
+7. Crear un archivo `.env` en la raíz del proyecto **(dentro de la carpeta challenge a la misma altura del docker-compose.yml)** con el siguiente contenido:
 
 ```env
 PORT=4000
