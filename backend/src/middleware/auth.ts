@@ -122,7 +122,7 @@ export const generateTokens = async ({
   email: string;
 }) => {
   const accessToken = jwt.sign({ userId, email }, process.env.JWT_SECRET!, {
-    expiresIn: "30s", // Aumentamos a 15 minutos para desarrollo
+    expiresIn: "30m",
   });
 
   const refreshToken = jwt.sign(
