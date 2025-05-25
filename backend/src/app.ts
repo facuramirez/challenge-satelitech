@@ -6,8 +6,10 @@ import dotenv from "dotenv";
 
 import authRoutes from "./routes/authRoutes";
 import tripsRoutes from "./routes/tripRoutes";
+import userRoutes from "./routes/userRoutes";
 import healthCheckRoutes from "./routes/healthCheckRoutes";
 import { auth } from "./middleware/auth";
+import { User } from "./models/User";
 
 dotenv.config();
 
@@ -18,7 +20,7 @@ app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.ORIGIN,
     credentials: true,
   })
 );
@@ -27,12 +29,33 @@ app.use(
 app.use("/api/info", healthCheckRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/trips", auth, tripsRoutes);
+app.use("/api/users", userRoutes);
 
 // Database connection
 mongoose
   .connect(process.env.MONGODB_URI!)
-  .then(() => {
+  .then(async () => {
     console.log("Connected to MongoDB");
+
+    // Verificar si existe el usuario admin
+    const adminEmail = "admin@satelitech.com";
+    const adminExists = await User.findOne({ email: adminEmail });
+
+    if (!adminExists) {
+      try {
+        // Crear usuario admin directamente
+        const adminUser = new User({
+          email: adminEmail,
+          password: "123456",
+          role: "admin",
+        });
+
+        await adminUser.save();
+        console.log("Usuario admin creado exitosamente");
+      } catch (error) {
+        console.error("Error al crear usuario admin:", error);
+      }
+    }
   })
   .catch((error) => {
     console.error("MongoDB connection error:", error);

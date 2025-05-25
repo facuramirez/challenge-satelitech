@@ -1,19 +1,23 @@
 import { Router } from "express";
-import { register, login, logout } from "../controllers/authController";
+import { login, logout } from "../controllers/authController";
 import { auth, generateTokens } from "../middleware/auth";
 
 const router = Router();
 
-router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", auth, logout);
 router.post("/refresh", auth, async (req, res) => {
   try {
-    const { _id, email } = req.user;
+    if (!req.user) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+
+    const { userId, email, role } = req.user;
     const { accessToken: newToken, refreshToken: newRefreshToken } =
       await generateTokens({
-        userId: _id,
+        userId,
         email,
+        role,
       });
 
     // Establecer las nuevas cookies
@@ -21,7 +25,7 @@ router.post("/refresh", auth, async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 15 * 60 * 1000, // 30 segundos
+      maxAge: 15 * 60 * 1000, // 15 minutos
     });
 
     res.cookie("refreshToken", newRefreshToken, {

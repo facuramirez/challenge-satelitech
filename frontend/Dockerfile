@@ -1,34 +1,32 @@
-# Etapa 1: build de la aplicación con Yarn
+# Etapa 1: builder
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Limpiar el caché de yarn
-RUN yarn cache clean
-
-# Copiar solo los archivos necesarios para instalar dependencias
+# 1. Copio lockfiles y package.json para cachear deps
 COPY package.json yarn.lock ./
-
-# Instalar dependencias
 RUN yarn install --frozen-lockfile
 
-# Copiar el resto del proyecto
+# 2. Copio el resto y construyo la app
 COPY . .
-
-# Construir la aplicación
 RUN yarn build
 
-# Etapa 2: servir archivos estáticos con nginx
-FROM nginx:alpine
+# Etapa 2: preview con Vite
+FROM node:20-alpine
 
-# Copiar configuración personalizada de Nginx
-COPY nginx.conf /etc/nginx/nginx.conf
+WORKDIR /app
 
-# Copiar el build de Vite
-COPY --from=builder /app/dist /usr/share/nginx/html
+# 3. Copio sólo lo necesario para preview (incluye vite en devDependencies)
+COPY package.json yarn.lock ./
 
-# Exponer puerto 80
-EXPOSE 80
+# 4. Instalo todas las deps (sin --production, para que vite esté disponible)
+RUN yarn install --frozen-lockfile
 
-# Ejecutar Nginx
-ENTRYPOINT ["nginx", "-g", "daemon off;"]
+# 5. Copio el build estático
+COPY --from=builder /app/dist ./dist
+
+# 6. Exponer puerto que usa vite preview
+EXPOSE 4173
+
+# 7. Arrancar vite preview
+CMD ["yarn", "preview", "--host", "0.0.0.0", "--port", "4173"]

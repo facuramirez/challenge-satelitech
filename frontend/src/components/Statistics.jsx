@@ -30,7 +30,7 @@ export const Statistics = () => {
         setIsLoading(true);
         await fetchTrips();
       } catch (error) {
-        console.log(error);
+        // console.log(error);
       } finally {
         setIsLoading(false);
       }
@@ -45,8 +45,6 @@ export const Statistics = () => {
   if (isLoading) {
     return <ChartsSkeleton />;
   }
-
-  console.log(allTrips);
 
   return (
     <div className="w-full h-full flex flex-col gap-4 min-h-[calc(100vh-7rem)]">

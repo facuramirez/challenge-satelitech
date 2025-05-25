@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import useTripStore from "../store/useTripStore";
-import TripTableSkeleton from "./TripTableSkeleton";
-import TripModal from "./TripModal";
+import useUserStore from "../store/useUserStore";
+import UserTableSkeleton from "./UserTableSkeleton";
+import UserModal from "./UserModal";
 import ConfirmationModal from "./ConfirmationModal";
 import { toast } from "react-toastify";
+import { formatDateToDatetimeLocal } from "../utils/formatDatePicker";
+import useAuthStore from "../store/useAuthStore";
 
 const SortArrow = ({ direction }) => {
   if (!direction) return null;
@@ -55,37 +57,37 @@ const SortableHeader = ({ label, field, sortConfig, onSort }) => {
   );
 };
 
-export const TripsTable = () => {
+export const UsersTable = () => {
   const {
-    allTrips,
-    trips,
+    allUsers,
+    users,
     loading,
     error,
-    fetchTrips,
+    fetchUsers,
     currentPage,
     totalPages,
     pageSize,
     setPage,
     setPageSize,
-    sortTrips,
+    sortUsers,
     sortConfig,
-    deleteTrip,
-    updateTrip,
-  } = useTripStore();
+    deleteUser,
+  } = useUserStore();
 
+  const currentUser = useAuthStore((state) => state.user);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [tripToDelete, setTripToDelete] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const loadTrips = async () => {
+    const loadUsers = async () => {
       try {
-        await fetchTrips();
+        await fetchUsers();
       } catch (err) {
         toast.error(
-          "Error al cargar los viajes. Por favor, intente nuevamente.",
+          "Error al cargar los usuarios. Por favor, intente nuevamente.",
           {
             position: "bottom-center",
             autoClose: 5000,
@@ -94,64 +96,84 @@ export const TripsTable = () => {
       }
     };
 
-    loadTrips();
+    loadUsers();
   }, []);
 
-  const handleOpenModal = (trip = null) => {
-    setSelectedTrip(trip);
+  const handleOpenModal = (user = null) => {
+    setSelectedUser(user);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
-    setSelectedTrip(null);
+    setSelectedUser(null);
     setIsModalOpen(false);
   };
 
-  const handleOpenDeleteModal = (trip) => {
-    setTripToDelete(trip);
+  const handleOpenDeleteModal = (user) => {
+    if (user.email === currentUser.email) {
+      toast.error("No puedes eliminar tu propio usuario", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
+    if (user.role === "admin") {
+      const adminCount = users.filter((u) => u.role === "admin").length;
+      if (adminCount === 1) {
+        toast.error("No puedes eliminar el último usuario administrador", {
+          position: "bottom-center",
+        });
+        return;
+      }
+    }
+
+    setUserToDelete(user);
     setIsDeleteModalOpen(true);
   };
 
   const handleCloseDeleteModal = () => {
-    setTripToDelete(null);
+    setUserToDelete(null);
     setIsDeleteModalOpen(false);
   };
 
   const handleDelete = async () => {
-    if (!tripToDelete) return;
+    if (!userToDelete) return;
 
     setIsDeleting(true);
     try {
-      await deleteTrip(tripToDelete._id);
-      toast.success("Viaje eliminado correctamente", {
+      await deleteUser(userToDelete._id);
+      await fetchUsers();
+      toast.success("Usuario eliminado correctamente", {
         position: "bottom-center",
       });
       handleCloseDeleteModal();
     } catch (error) {
-      toast.error("Error al eliminar el viaje", {
-        position: "bottom-center",
-      });
+      toast.error(
+        error.response?.data?.message || "Error al eliminar el usuario",
+        {
+          position: "bottom-center",
+        }
+      );
     } finally {
       setIsDeleting(false);
     }
   };
 
   if (loading) {
-    return <TripTableSkeleton />;
+    return <UserTableSkeleton />;
   }
 
   return (
     <div className="flex flex-col gap-4 p-6 shadow shadow-sm">
       <div className="flex flex-row justify-between items-center gap-2">
         <span className="text-lg font-bold text-gray-700">
-          Viajes ({allTrips.length})
+          Usuarios ({allUsers.length})
         </span>
         <button
           onClick={() => handleOpenModal()}
           className="px-3 py-1 text-base text-white bg-[var(--orange)] hover:bg-[var(--orange)] rounded-md transition-colors cursor-pointer"
-          // className="text-white px-4 py-1 rounded-md bg-[var(--orange)] hover:bg-[var(--orange-hover)] transition-colors duration-200 cursor-pointer"
         >
-          Nuevo viaje
+          Nuevo usuario
         </button>
       </div>
       <div className="overflow-x-auto">
@@ -162,52 +184,28 @@ export const TripsTable = () => {
                 #
               </th>
               <SortableHeader
-                label="Camión"
-                field="truck"
+                label="Email"
+                field="email"
                 sortConfig={sortConfig}
-                onSort={sortTrips}
+                onSort={sortUsers}
               />
               <SortableHeader
-                label="Conductor"
-                field="driver"
+                label="Rol"
+                field="role"
                 sortConfig={sortConfig}
-                onSort={sortTrips}
+                onSort={sortUsers}
               />
               <SortableHeader
-                label="Origen"
-                field="origin"
+                label="Creado"
+                field="createdAt"
                 sortConfig={sortConfig}
-                onSort={sortTrips}
+                onSort={sortUsers}
               />
               <SortableHeader
-                label="Destino"
-                field="destination"
+                label="Actualizado"
+                field="updatedAt"
                 sortConfig={sortConfig}
-                onSort={sortTrips}
-              />
-              <SortableHeader
-                label="Combustible"
-                field="fuel"
-                sortConfig={sortConfig}
-                onSort={sortTrips}
-              />
-              <SortableHeader
-                label="Litros"
-                field="liters"
-                sortConfig={sortConfig}
-                onSort={sortTrips}
-              />
-              <SortableHeader
-                label="Fecha Salida"
-                field="departureDate"
-                sortConfig={sortConfig}
-                onSort={sortTrips}
-              />
-              <SortableHeader
-                label="Estado"
-                field="status"
-                sortConfig={sortConfig}
-                onSort={sortTrips}
+                onSort={sortUsers}
               />
               <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">
                 Acciones
@@ -215,59 +213,47 @@ export const TripsTable = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {trips.map((trip, index) => {
-              const status = (
-                trip.status.charAt(0).toUpperCase() + trip.status.slice(1)
-              ).replaceAll("_", " ");
-              return (
-                <tr key={trip._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {(currentPage - 1) * pageSize + index + 1}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{trip.truck}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{trip.driver}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{trip.origin}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {trip.destination}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{trip.fuel}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{trip.liters}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {new Date(trip.departureDate).toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        {
-                          sin_iniciar: "bg-yellow-100 text-yellow-800",
-                          en_transito: "bg-blue-100 text-blue-800",
-                          completado: "bg-green-100 text-green-800",
-                          cancelado: "bg-red-100 text-red-800",
-                        }[trip.status]
-                      }`}
+            {users.map((user, index) => (
+              <tr key={user._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {(currentPage - 1) * pageSize + index + 1}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      user.role === "admin"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {user.role === "admin" ? "Administrador" : "Usuario"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {new Date(user.createdAt).toLocaleString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {new Date(user.updatedAt).toLocaleString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleOpenModal(user)}
+                      className="px-3 py-1 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded-md transition-colors cursor-pointer"
                     >
-                      {status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleOpenModal(trip)}
-                        className="px-3 py-1 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded-md transition-colors cursor-pointer"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleOpenDeleteModal(trip)}
-                        className="px-3 py-1 text-sm text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors cursor-pointer"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleOpenDeleteModal(user)}
+                      className="px-3 py-1 text-sm text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors cursor-pointer"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -327,12 +313,12 @@ export const TripsTable = () => {
         </div>
       </div>
 
-      {/* Modal de viaje (nuevo/editar) */}
+      {/* Modal de usuario (nuevo/editar) */}
       {isModalOpen && (
-        <TripModal
+        <UserModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
-          trip={selectedTrip}
+          user={selectedUser}
         />
       )}
 
@@ -341,10 +327,10 @@ export const TripsTable = () => {
         isOpen={isDeleteModalOpen}
         onClose={handleCloseDeleteModal}
         onConfirm={handleDelete}
-        title="Eliminar Viaje"
-        message={`¿Está seguro que desea eliminar el viaje del camión ${
-          tripToDelete?.truck || ""
-        } con destino a ${tripToDelete?.destination || ""}?`}
+        title="Eliminar Usuario"
+        message={`¿Está seguro que desea eliminar el usuario ${
+          userToDelete?.email || ""
+        }?`}
         loading={isDeleting}
       />
     </div>

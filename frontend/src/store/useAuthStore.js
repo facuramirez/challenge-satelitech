@@ -13,11 +13,12 @@ const useAuthStore = create((set, get) => ({
   login: async (credentials) => {
     try {
       const response = await axios.post(
-        "http://localhost:4000/api/auth/login",
+        `http://localhost:4000/api/auth/login`,
         credentials,
         { withCredentials: true }
       );
-      const { token } = response.data;
+      
+      const { token } = response.data.user;
       localStorage.setItem("token", token);
       const decoded = jwtDecode(token);
       
@@ -46,7 +47,7 @@ const useAuthStore = create((set, get) => ({
   },
   
   logout: () => {
-    axios.post("http://localhost:4000/api/auth/logout", {}, { withCredentials: true });
+    axios.post(`http://localhost:4000/api/auth/logout`, {}, { withCredentials: true });
     localStorage.removeItem("token");
     delete axios.defaults.headers.common["Authorization"];
     set({

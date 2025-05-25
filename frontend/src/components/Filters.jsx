@@ -29,7 +29,7 @@ export const Filters = () => {
         setLoading(true);
         await fetchTrips(debouncedFilters);
       } catch (error) {
-        console.error("Error al aplicar los filtros:", error);
+        // console.error("Error al aplicar los filtros:", error);
       } finally {
         setLoading(false);
       }

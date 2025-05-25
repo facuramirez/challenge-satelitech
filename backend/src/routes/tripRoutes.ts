@@ -15,7 +15,7 @@ import {
 const router = Router();
 
 // Rutas protegidas que requieren autenticación
-router.use(auth);
+// router.use(auth);
 
 // Obtener todos los viajes
 router.get("/", getTrips);

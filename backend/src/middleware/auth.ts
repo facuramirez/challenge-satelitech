@@ -5,41 +5,16 @@ import { User } from "../models/User";
 interface JwtPayload {
   userId: string;
   email: string;
+  role: string;
 }
 
 declare global {
   namespace Express {
     interface Request {
-      user?: any;
+      user?: JwtPayload;
     }
   }
 }
-
-export const auth2 = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const token = req.cookies.jwt;
-
-    if (!token) {
-      return res.status(401).json({ message: "No token provided" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-    const user = await User.findById(decoded.userId);
-
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    res.status(401).json({ message: "Invalid token" });
-  }
-};
 
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.cookies.jwt;
@@ -64,7 +39,13 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
       return res.status(401).json({ message: "User not found" });
     }
 
-    req.user = user;
+    // Creamos el objeto user con la estructura correcta
+    req.user = {
+      userId: user._id.toString(),
+      email: user.email,
+      role: user.role || "user", // Valor por defecto si role es undefined
+    };
+
     return next();
   } catch (err: any) {
     // Si el token expiró, intentamos con el refreshToken
@@ -86,6 +67,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
           await generateTokens({
             userId: user._id.toString(),
             email: user.email,
+            role: user.role || "user", // Valor por defecto si role es undefined
           });
 
         // Enviamos nuevo token como cookie
@@ -93,7 +75,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "strict",
-          maxAge: 0.5 * 60 * 1000, // 15 minutos
+          maxAge: 15 * 60 * 1000, // 15 minutos
         });
 
         res.cookie("refreshToken", newRefreshToken, {
@@ -103,7 +85,13 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
         });
 
-        req.user = user;
+        // Creamos el objeto user con la estructura correcta
+        req.user = {
+          userId: user._id.toString(),
+          email: user.email,
+          role: user.role || "user", // Valor por defecto si role es undefined
+        };
+
         return next();
       } catch (refreshErr) {
         return res.status(401).json({ message: "Invalid refreshToken" });
@@ -114,19 +102,51 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+// Middleware para verificar rol de administrador
+export const isAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        message: "Acceso denegado. Se requiere rol de administrador",
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error en isAdmin middleware:", error);
+    res
+      .status(500)
+      .json({ message: "Error al verificar rol de administrador" });
+  }
+};
+
 export const generateTokens = async ({
   userId,
   email,
+  role,
 }: {
   userId: string;
   email: string;
+  role: string;
 }) => {
-  const accessToken = jwt.sign({ userId, email }, process.env.JWT_SECRET!, {
-    expiresIn: "30m",
-  });
+  const accessToken = jwt.sign(
+    { userId, email, role },
+    process.env.JWT_SECRET!,
+    {
+      expiresIn: "10s",
+    }
+  );
 
   const refreshToken = jwt.sign(
-    { userId, email },
+    { userId, email, role },
     process.env.JWT_REFRESH_SECRET!,
     {
       expiresIn: "7d",

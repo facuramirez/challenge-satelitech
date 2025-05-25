@@ -7,9 +7,6 @@ export default defineConfig({
   base: '/',
   server: {
     port: 3000, // puerto para 'vite dev'
-  },
-  preview: {
-    port: 5000 // puerto para 'vite preview'
-  },
+  }, 
   plugins: [react(), tailwindcss()],
 })

@@ -12,7 +12,7 @@ const TripModal = ({ isOpen, onClose, trip }) => {
     origin: "",
     destination: "",
     fuel: "",
-    liters: 0,
+    liters: "",
     departureDate: formatDateToDatetimeLocal(new Date()),
     status: "",
   });
@@ -310,9 +310,9 @@ const TripModal = ({ isOpen, onClose, trip }) => {
                   disabled={loading}
                 >
                   <option value="">-</option>
-                  <option value="Córdoba">Córdoba</option>
-                  <option value="Buenos Aires">Buenos Aires</option>
-                  <option value="Santa Fe">Santa Fe</option>
+                  <option value="Estación Y">Estación Y</option>
+                  <option value="Estación Z">Estación Z</option>
+                  <option value="Estación W">Estación W</option>
                 </select>
                 <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">
                   Destino
@@ -434,14 +434,14 @@ const TripModal = ({ isOpen, onClose, trip }) => {
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 cursor-pointer text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 text-sm font-medium text-white bg-[var(--orange)] rounded-xl hover:bg-[var(--orange-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex justify-center items-center gap-2 px-6 py-2.5 cursor-pointer text-sm font-medium text-white bg-[var(--green)] rounded-xl hover:bg-[var(--green-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
                 {loading ? (

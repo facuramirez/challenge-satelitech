@@ -2,16 +2,18 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile      
     ports:
-      - "3000:80"
+      - "3000:4173"
     environment:
-      - NODE_ENV=production      
-    volumes:
-      - ./src:/usr/src/app/src
+      - NODE_ENV=${NODE_ENV}      
+    # volumes:
+    #   - ./src:/usr/src/app/src
     networks:
       - app-network
     restart: unless-stopped
+    depends_on:
+      - app
 
   app:
     build:
@@ -30,7 +32,7 @@ services:
     depends_on:
       - mongodb
     volumes:
-      - ./src:/usr/src/app/src 
+      - ./backend/src:/usr/src/app/src 
     networks:
       - app-network
     restart: unless-stopped

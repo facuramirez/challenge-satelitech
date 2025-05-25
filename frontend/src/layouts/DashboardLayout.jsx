@@ -6,7 +6,7 @@ import useAuthStore from "../store/useAuthStore";
 
 export const DashboardLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { email } = useAuthStore((state) => state.user);
+  const { email, role } = useAuthStore((state) => state.user);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -16,10 +16,14 @@ export const DashboardLayout = ({ children }) => {
     <>
       <nav className="fixed top-0 flex flex-row items-center justify-between bg-[var(--blue)] shadow-2xl h-16 w-full z-90 px-4 text-white">
         <img src={logo} alt="Logo" className="h-[80%]" />
-        <div className="flex flex-row gap-4 items-center justify-center w-fit">
-          <div className="flex flex-row gap-2 items-center justify-center w-fit">
+        <div className="flex flex-col items-center lg:items-end justify-center w-fit">
+          <div className="flex flex-row gap-2 items-center w-fit">
             <strong>Usuario:</strong>
             <span>{email}</span>
+          </div>
+          <div className="flex flex-row gap-2 items-center w-fit">
+            <strong>Rol:</strong>
+            <span>{role}</span>
           </div>
         </div>
         <button

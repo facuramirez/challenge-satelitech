@@ -1,10 +1,10 @@
 export interface ITrip {
   departureDate: Date;
-  destination: string;
+  destination: "Estación Y" | "Estación Z" | "Estación W";
   driver: string;
   fuel: "Diesel" | "Gasolina" | "GNC" | "Biodiesel";
   liters: string;
-  origin: string;
+  origin: "Planta A" | "Planta B" | "Planta C";
   status: "sin_iniciar" | "en_transito" | "completado" | "cancelado";
   truck: string;
 }

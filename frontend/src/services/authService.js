@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:4000/api';
+const BASE_URL = `http://localhost:4000/api`;
 
-// Crear una instancia de axios con configuración común
+/// Crear una instancia de axios con configuración común
 export const axiosInstance = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,

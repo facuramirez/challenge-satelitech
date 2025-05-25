@@ -9,6 +9,7 @@ import { Trips } from "../components/Trips";
 import { Users } from "../components/Users";
 import { Statistics } from "../components/Statistics";
 import { AuthRoutes } from "./AuthRoutes"; // Asegúrate de que este existeúrate de importar correctamente
+import { AdminRoute } from "./AdminRoute";
 import useAuthStore from "../store/useAuthStore";
 
 export const AppRoutes = () => {
@@ -38,9 +39,11 @@ export const AppRoutes = () => {
               <Route
                 path="/usuarios"
                 element={
-                  <Dashboard>
-                    <Users />
-                  </Dashboard>
+                  <AdminRoute>
+                    <Dashboard>
+                      <Users />
+                    </Dashboard>
+                  </AdminRoute>
                 }
               />
               <Route

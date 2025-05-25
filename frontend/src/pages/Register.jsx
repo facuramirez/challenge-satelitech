@@ -11,6 +11,7 @@ import fondoLogin from "../assets/fondo-login.jpeg";
 import logoBlanco from "../assets/logo-blanco.png";
 import axios from "axios";
 import useAuthStore from "../store/useAuthStore";
+import { login } from "../services/authService";
 
 export const Register = () => {
   const [formData, setFormData] = useState({
@@ -64,21 +65,28 @@ export const Register = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:4000/api/auth/register",
-        {
-          email: formData.email,
-          password: formData.password,
-        }
-      );
+      const credentials = {
+        email: formData.email,
+        password: formData.password,
+      };
 
-      toast.success("¡Registro exitoso!");
-      // const { user } = response.data;
-      // setAuth(user);
-      navigate("/ingreso");
+      await axios.post(`http://localhost:4000/api/users`, credentials);
+
+      const success = await login(credentials);
+
+      if (success) {
+        setAuth(success);
+        toast.success("¡Registro exitoso!");
+        toast.success("¡Bienvenido!");
+        setTimeout(() => {
+          navigate("/viajes");
+        }, 100);
+      } else {
+        toast.error("Error al iniciar sesión");
+      }
     } catch (error) {
       toast.error(
-        error.response.data.message || "Error al registrar el usuario"
+        error.response?.data?.message || "Error al registrar el usuario"
       );
     } finally {
       setIsLoading(false);

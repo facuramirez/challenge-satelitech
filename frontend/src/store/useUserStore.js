@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { axiosInstance } from '../services/authService';
 
-const useTripStore = create((set, get) => ({
-  allTrips: [], // Todos los viajes sin paginar
-  trips: [], // Viajes paginados actuales
+const useUserStore = create((set, get) => ({
+  // Estado
+  allUsers: [],
+  users: [],
   total: 0,
   totalPages: 0,
   currentPage: 1,
@@ -15,13 +16,13 @@ const useTripStore = create((set, get) => ({
     direction: 'asc'
   },
 
-  // Ordenar viajes
-  sortTrips: (key) => {
+  // Ordenar usuarios
+  sortUsers: (key) => {
     set((state) => {
       const direction = state.sortConfig.key === key && state.sortConfig.direction === 'asc' ? 'desc' : 'asc';
       
-      const sortedTrips = [...state.allTrips].sort((a, b) => {
-        if (key === 'departureDate') {
+      const sortedUsers = [...state.allUsers].sort((a, b) => {
+        if (key === 'createdAt' || key === 'updatedAt') {
           return direction === 'asc' 
             ? new Date(a[key]) - new Date(b[key])
             : new Date(b[key]) - new Date(a[key]);
@@ -36,39 +37,40 @@ const useTripStore = create((set, get) => ({
       const end = start + state.pageSize;
 
       return {
-        allTrips: sortedTrips,
-        trips: sortedTrips.slice(start, end),
+        allUsers: sortedUsers,
+        users: sortedUsers.slice(start, end),
         sortConfig: { key, direction }
       };
     });
   },
 
-  // Obtener todos los viajes
-  fetchTrips: async (query={}) => {
+  // Obtener todos los usuarios
+  fetchUsers: async () => {
     set({ loading: true });
     try {
-      const response = await axiosInstance.get('/trips', { params: query });      
-      const allTrips = response.data.trips;      
+      const response = await axiosInstance.get('/users');
+      const allUsers = response.data;
+
       set((state) => {
-        const total = allTrips.length;
+        const total = allUsers.length;
         const totalPages = Math.ceil(total / state.pageSize);
         const start = (state.currentPage - 1) * state.pageSize;
         const end = start + state.pageSize;
         
         return {
-          allTrips,
-          trips: allTrips.slice(start, end),
+          allUsers,
+          users: allUsers.slice(start, end),
           total,
           totalPages,
           error: null
         };
       });
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Error al cargar los viajes';
+      const errorMessage = error.response?.data?.message || 'Error al cargar los usuarios';
       set({ 
         error: errorMessage,
-        allTrips: [],
-        trips: [],
+        allUsers: [],
+        users: [],
         total: 0,
         totalPages: 0
       });
@@ -78,23 +80,23 @@ const useTripStore = create((set, get) => ({
     }
   },
 
-  // Crear nuevo viaje
-  createTrip: async (tripData) => {    
+  // Crear nuevo usuario
+  createUser: async (userData) => {    
     try {
-      const response = await axiosInstance.post('/trips', tripData);
+      const response = await axiosInstance.post('/users', userData);
       
-      // Actualizar el estado con el nuevo viaje
+      // Actualizar el estado con el nuevo usuario
       set((state) => {
-        const newAllTrips = [response.data, ...state.allTrips];
-        const total = newAllTrips.length;
+        const newAllUsers = [response.data, ...state.allUsers];
+        const total = newAllUsers.length;
         const totalPages = Math.ceil(total / state.pageSize);
         const start = (state.currentPage - 1) * state.pageSize;
         const end = start + state.pageSize;
 
         // Mantener el ordenamiento actual si existe
-        const sortedTrips = state.sortConfig.key 
-          ? [...newAllTrips].sort((a, b) => {
-              if (state.sortConfig.key === 'departureDate') {
+        const sortedUsers = state.sortConfig.key 
+          ? [...newAllUsers].sort((a, b) => {
+              if (state.sortConfig.key === 'createdAt' || state.sortConfig.key === 'updatedAt') {
                 return state.sortConfig.direction === 'asc'
                   ? new Date(a[state.sortConfig.key]) - new Date(b[state.sortConfig.key])
                   : new Date(b[state.sortConfig.key]) - new Date(a[state.sortConfig.key]);
@@ -104,11 +106,11 @@ const useTripStore = create((set, get) => ({
               if (a[state.sortConfig.key] > b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? 1 : -1;
               return 0;
             })
-          : newAllTrips;
+          : newAllUsers;
 
         return {
-          allTrips: sortedTrips,
-          trips: sortedTrips.slice(start, end),
+          allUsers: sortedUsers,
+          users: sortedUsers.slice(start, end),
           total,
           totalPages
         };
@@ -116,7 +118,99 @@ const useTripStore = create((set, get) => ({
       
       return { success: true };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Error al crear el viaje';
+      const errorMessage = error.response?.data?.message || 'Error al crear el usuario';
+      set({ error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Actualizar usuario
+  updateUser: async (userId, userData) => {
+    try {
+      const response = await axiosInstance.put(`/users/${userId}`, userData);
+      
+      // Actualizar el estado con el usuario modificado
+      set((state) => {
+        const updatedAllUsers = state.allUsers.map(user => 
+          user._id === userId ? { ...user, ...response.data } : user
+        );
+        
+        const total = updatedAllUsers.length;
+        const totalPages = Math.ceil(total / state.pageSize);
+        const start = (state.currentPage - 1) * state.pageSize;
+        const end = start + state.pageSize;
+
+        // Mantener el ordenamiento actual si existe
+        const sortedUsers = state.sortConfig.key 
+          ? [...updatedAllUsers].sort((a, b) => {
+              if (state.sortConfig.key === 'createdAt' || state.sortConfig.key === 'updatedAt') {
+                return state.sortConfig.direction === 'asc'
+                  ? new Date(a[state.sortConfig.key]) - new Date(b[state.sortConfig.key])
+                  : new Date(b[state.sortConfig.key]) - new Date(a[state.sortConfig.key]);
+              }
+              
+              if (a[state.sortConfig.key] < b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? -1 : 1;
+              if (a[state.sortConfig.key] > b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? 1 : -1;
+              return 0;
+            })
+          : updatedAllUsers;
+
+        return {
+          allUsers: sortedUsers,
+          users: sortedUsers.slice(start, end),
+          total,
+          totalPages
+        };
+      });
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Error al actualizar el usuario';
+      set({ error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Eliminar usuario
+  deleteUser: async (userId) => {
+    try {
+      await axiosInstance.delete(`/users/${userId}`);
+      
+      // Actualizar el estado eliminando el usuario
+      set((state) => {
+        const updatedAllUsers = state.allUsers.filter(user => user._id !== userId);
+        const total = updatedAllUsers.length;
+        const totalPages = Math.ceil(total / state.pageSize);
+        const start = (state.currentPage - 1) * state.pageSize;
+        const end = start + state.pageSize;
+
+        // Mantener el ordenamiento actual si existe
+        const sortedUsers = state.sortConfig.key 
+          ? [...updatedAllUsers].sort((a, b) => {
+              if (state.sortConfig.key === 'createdAt' || state.sortConfig.key === 'updatedAt') {
+                return state.sortConfig.direction === 'asc'
+                  ? new Date(a[state.sortConfig.key]) - new Date(b[state.sortConfig.key])
+                  : new Date(b[state.sortConfig.key]) - new Date(a[state.sortConfig.key]);
+              }
+              
+              if (a[state.sortConfig.key] < b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? -1 : 1;
+              if (a[state.sortConfig.key] > b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? 1 : -1;
+              return 0;
+            })
+          : updatedAllUsers;
+
+        return {
+          allUsers: sortedUsers,
+          users: sortedUsers.slice(start, end),
+          total,
+          totalPages,
+          currentPage: state.currentPage > totalPages ? totalPages : state.currentPage
+        };
+      });
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Error al eliminar el usuario';
       set({ error: errorMessage });
       return { success: false, error: errorMessage };
     }
@@ -129,7 +223,7 @@ const useTripStore = create((set, get) => ({
       const end = start + state.pageSize;
       return {
         currentPage: page,
-        trips: state.allTrips.slice(start, end)
+        users: state.allUsers.slice(start, end)
       };
     });
   },
@@ -139,12 +233,12 @@ const useTripStore = create((set, get) => ({
     set((state) => {
       const start = 0;
       const end = size;
-      const totalPages = Math.ceil(state.allTrips.length / size);
+      const totalPages = Math.ceil(state.allUsers.length / size);
       return {
         pageSize: size,
         currentPage: 1,
         totalPages,
-        trips: state.allTrips.slice(start, end)
+        users: state.allUsers.slice(start, end)
       };
     });
   },
@@ -152,97 +246,7 @@ const useTripStore = create((set, get) => ({
   setLoading: (loading) => set({ loading }),
   
   // Limpiar errores
-  clearError: () => set({ error: null }),
-
-  updateTrip: async (tripId, tripData) => {
-    try {
-      const response = await axiosInstance.put(`/trips/${tripId}`, tripData);
-      
-      // Actualizar el estado con el viaje modificado
-      set((state) => {
-        const updatedAllTrips = state.allTrips.map(trip => 
-          trip._id === tripId ? { ...trip, ...response.data } : trip
-        );
-        
-        const total = updatedAllTrips.length;
-        const totalPages = Math.ceil(total / state.pageSize);
-        const start = (state.currentPage - 1) * state.pageSize;
-        const end = start + state.pageSize;
-
-        // Mantener el ordenamiento actual si existe
-        const sortedTrips = state.sortConfig.key 
-          ? [...updatedAllTrips].sort((a, b) => {
-              if (state.sortConfig.key === 'departureDate') {
-                return state.sortConfig.direction === 'asc'
-                  ? new Date(a[state.sortConfig.key]) - new Date(b[state.sortConfig.key])
-                  : new Date(b[state.sortConfig.key]) - new Date(a[state.sortConfig.key]);
-              }
-              
-              if (a[state.sortConfig.key] < b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? -1 : 1;
-              if (a[state.sortConfig.key] > b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? 1 : -1;
-              return 0;
-            })
-          : updatedAllTrips;
-
-        return {
-          allTrips: sortedTrips,
-          trips: sortedTrips.slice(start, end),
-          total,
-          totalPages
-        };
-      });
-
-      return { success: true };
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Error al actualizar el viaje';
-      set({ error: errorMessage });
-      return { success: false, error: errorMessage };
-    }
-  },
-
-  deleteTrip: async (tripId) => {
-    try {
-      await axiosInstance.put(`/trips/${tripId}`, { status: 'cancelado' });
-      
-      // Actualizar el estado eliminando el viaje
-      set((state) => {
-        const updatedAllTrips = state.allTrips.filter(trip => trip._id !== tripId);
-        const total = updatedAllTrips.length;
-        const totalPages = Math.ceil(total / state.pageSize);
-        const start = (state.currentPage - 1) * state.pageSize;
-        const end = start + state.pageSize;
-
-        // Mantener el ordenamiento actual si existe
-        const sortedTrips = state.sortConfig.key 
-          ? [...updatedAllTrips].sort((a, b) => {
-              if (state.sortConfig.key === 'departureDate') {
-                return state.sortConfig.direction === 'asc'
-                  ? new Date(a[state.sortConfig.key]) - new Date(b[state.sortConfig.key])
-                  : new Date(b[state.sortConfig.key]) - new Date(a[state.sortConfig.key]);
-              }
-              
-              if (a[state.sortConfig.key] < b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? -1 : 1;
-              if (a[state.sortConfig.key] > b[state.sortConfig.key]) return state.sortConfig.direction === 'asc' ? 1 : -1;
-              return 0;
-            })
-          : updatedAllTrips;
-
-        return {
-          allTrips: sortedTrips,
-          trips: sortedTrips.slice(start, end),
-          total,
-          totalPages,
-          currentPage: state.currentPage > totalPages ? totalPages : state.currentPage
-        };
-      });
-
-      return { success: true };
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Error al eliminar el viaje';
-      set({ error: errorMessage });
-      return { success: false, error: errorMessage };
-    }
-  },
+  clearError: () => set({ error: null })
 }));
 
-export default useTripStore; 
+export default useUserStore; 
