@@ -203,7 +203,7 @@ const useTripStore = create((set, get) => ({
 
   deleteTrip: async (tripId) => {
     try {
-      await axiosInstance.delete(`/trips/${tripId}`);
+      await axiosInstance.put(`/trips/${tripId}`, { status: 'cancelado' });
       
       // Actualizar el estado eliminando el viaje
       set((state) => {

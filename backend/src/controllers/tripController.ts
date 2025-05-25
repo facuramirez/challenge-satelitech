@@ -114,6 +114,9 @@ export const getTrips = async (
     delete paramsToQuery.initDepartureDate;
     delete paramsToQuery.endDepartureDate;
 
+    // Agregar condición para excluir status "cancelado"
+    paramsToQuery.status = { $ne: "cancelado" };
+
     // Ejecutar consultas en paralelo para mejor rendimiento
     const [trips, total] = await Promise.all([
       Trip.find(paramsToQuery)

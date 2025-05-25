@@ -407,7 +407,7 @@ const TripModal = ({ isOpen, onClose, trip }) => {
                 <option value="">-</option>
                 <option value="sin_iniciar">Sin iniciar</option>
                 <option value="en_transito">En tránsito</option>
-                <option value="cancelado">Cancelado</option>
+                {/* <option value="cancelado">Cancelado</option> */}
                 <option value="completado">Completado</option>
               </select>
               <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">

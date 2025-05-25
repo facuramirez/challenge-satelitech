@@ -70,10 +70,10 @@ export const createTripsValidator = [
     .isString()
     .withMessage("Field origin must be a string"),
   check("status")
-    .exists()
-    .withMessage("Field status is required")
+    .optional()
     .isString()
-    .withMessage("Field status must be a string"),
+    .withMessage("Field status must be a string")
+    .isIn(["sin_iniciar", "en_transito", "completado"]),
   check("truck")
     .exists()
     .withMessage("Field truck is required")

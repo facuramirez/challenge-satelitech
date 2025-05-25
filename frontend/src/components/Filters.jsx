@@ -82,7 +82,7 @@ export const Filters = () => {
               name="driver"
               onChange={handleChange}
               placeholder="Nombre..."
-              className="mt-0.5 w-full rounded border-gray-300 bg-gray-100 pe-10 shadow-sm sm:text-sm outline-none py-2 px-4 appearance-none"
+              className="mt-0.5 w-full rounded border-gray-300 bg-gray-100 pe-10 shadow-none sm:text-sm outline-none py-2 px-4 appearance-none"
             />
 
             <span className="absolute inset-y-0 right-1 top-8 grid w-8 place-content-center">
@@ -122,7 +122,7 @@ export const Filters = () => {
               <option value="">Todos</option>
               <option value="sin_iniciar">Sin iniciar</option>
               <option value="en_transito">En tránsito</option>
-              <option value="cancelado">Cancelado</option>
+              {/* <option value="cancelado">Cancelado</option> */}
               <option value="completado">Completado</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-2 top-8 flex items-center">
@@ -151,7 +151,7 @@ export const Filters = () => {
               name="minLiters"
               onChange={handleChange}
               placeholder="Litros..."
-              className="mt-0.5 w-full rounded border-gray-300 bg-gray-100 pe-10 shadow-sm sm:text-sm outline-none py-2 px-4"
+              className="mt-0.5 w-full rounded border-gray-300 bg-gray-100 pe-10 shadow-none sm:text-sm outline-none py-2 px-4"
             />
           </div>
         </label>
@@ -166,7 +166,7 @@ export const Filters = () => {
               name="maxLiters"
               onChange={handleChange}
               placeholder="Litros..."
-              className="mt-0.5 w-full rounded border-gray-300 bg-gray-100 pe-10 shadow-sm sm:text-sm outline-none py-2 px-4"
+              className="mt-0.5 w-full rounded border-gray-300 bg-gray-100 pe-10 shadow-none sm:text-sm outline-none py-2 px-4"
             />
           </div>
         </label>
@@ -219,7 +219,7 @@ export const Filters = () => {
                 min={formatDateToDatetimeLocal(
                   new Date(new Date().getFullYear(), 0, 1)
                 )}
-                className="mt-1 bg-gray-100 text-sm peer w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all"
+                className="mt-1.5 bg-gray-100 text-sm peer w-full px-4 py-2 shadow-none rounded-sm focus:border-[var(--blue)] focus:outline-none transition-all"
               />
               {/* <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">
                 Fecha de Salida
@@ -243,7 +243,7 @@ export const Filters = () => {
                 min={formatDateToDatetimeLocal(
                   new Date(new Date().getFullYear(), 0, 1)
                 )}
-                className="mt-1 bg-gray-100 text-sm peer w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-[var(--blue)] focus:outline-none transition-all"
+                className="mt-1.5 bg-gray-100 text-sm peer w-full px-4 py-2 shadow-none rounded-sm focus:border-[var(--blue)] focus:outline-none transition-all"
               />
               {/* <label className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600">
                 Fecha de Salida
