@@ -95,7 +95,7 @@ export const login = async (req: Request, res: Response) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 0.5 * 60 * 1000, // 15 minutos
+      maxAge: 15 * 60 * 1000, // 15 minutos
     });
 
     res.cookie("refreshToken", refreshToken, {

@@ -21,7 +21,7 @@ router.post("/refresh", auth, async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 0.5 * 60 * 1000, // 30 segundos
+      maxAge: 15 * 60 * 1000, // 30 segundos
     });
 
     res.cookie("refreshToken", newRefreshToken, {
