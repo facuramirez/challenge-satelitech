@@ -79,6 +79,12 @@ Gracias al uso de **volúmenes en Docker**, los datos permanecerán persistentes
 5. **Acceder a la aplicación** desde el navegador en:  
    👉 [http://localhost:3000](http://localhost:3000)
 
+   Al levantar los contenedores, se creará automáticamente una cuenta con rol de admin con las siguientes credenciales:
+
+   📧 Email: admin@satelitech.com
+
+   🔒 Contraseña: 123456
+
 ###
 
 6. **Para detener la aplicación**
